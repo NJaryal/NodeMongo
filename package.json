@@ -1,0 +1,19 @@
+{
+    "name": "server",
+    "version": "1.0.0",
+    "description": "",
+    "main": "server.js",
+    "scripts": {
+        "start": "nodemon server.js"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@hapi/joi": "^15.0.3",
+        "express": "^4.17.1",
+        "winston": "^3.2.1"
+    },
+    "devDependencies": {
+        "nodemon": "^1.19.1"
+    }
+}
