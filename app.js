@@ -1,7 +1,9 @@
 const express = require('express');
 const app = require('./api/routes/news')
 const logger = require('./utils/loggers')
+const mongoose = require('mongoose')
 
+mongoose.connect('mongodb+srv://node-news:node-news@node-news-wvps2.mongodb.net/test?retryWrites=true&w=majority', {useNewUrlParser: true});
 //CORS Handling
 app.use((req,res,next) =>{
     res.header('Access-Control-Allow-Origin','*');
@@ -33,5 +35,4 @@ app.use((error,req,res,next)=> {
     })
     logger.warn(`Error ${error.status} ` ,new Error(error.message));  
 })
-
 module.exports = app;
