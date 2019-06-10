@@ -8,8 +8,6 @@ const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const passport = require('passport')
 
-
-
 app.get('/users/login', (req,res) => {    
     res.render('login')
 });
@@ -23,7 +21,10 @@ app.get('/news', (req, res, next) => {
     .select('name _id')
     .exec()
     .then(data => {
-        if(data.length >= 10) {
+        if(!data) {
+            throw new CustomError('Internal Server Error', 500)
+        }
+        if(data.length >= 0) {
             res.status(200).json({
                 count: data.length,
                 newsArray: data                
@@ -35,19 +36,10 @@ app.get('/news', (req, res, next) => {
                 } catch (err) {
                   next(err)
                 }
-            }, 100)
-            
-        }        
+            }, 100)            
+        }  
     })
-    .catch((err) => {
-        setTimeout(function () {
-            try {
-                throw new CustomError(err.message, 500) 
-            } catch (err) {
-              next(err)
-            }
-        }, 100)
-    })
+    .catch((next))
 });
 
 app.get('/news/:id', (req, res, next) => {
@@ -55,20 +47,16 @@ app.get('/news/:id', (req, res, next) => {
     News.findById(id)
     .exec()
     .then(doc => {
-        res.status(200).json({
-            message: 'Single News!',
-            Details: doc
-        })
+        if(!doc) {
+            throw new CustomError('Single News Server Error', 500) 
+        } else {
+            res.status(200).json({
+                message: 'Single News!',
+                Details: doc
+            })
+        }        
     })
-    .catch((err) => { 
-        setTimeout(function () {
-            try {
-                throw new CustomError(err.message, 500) 
-            } catch (err) {
-              next(err)
-            }
-        }, 100)
-    })  
+    .catch(next)  
 });
 
 app.post('/news', (req, res, next) => {
@@ -79,20 +67,16 @@ app.post('/news', (req, res, next) => {
     })
     newsObj.save()
     .then(result => {
-        res.status(201).json({
-            Message: 'Successfully created a News!',
-            createdNews: result,
-        })
+        if(!result) {
+            throw new CustomError('Internal Server Error while saving', 500)
+        } else {
+            res.status(201).json({
+                Message: 'Successfully created a News!',
+                createdNews: result,
+            })
+        }        
     })
-    .catch(err => {
-        setTimeout(function () {
-            try {
-                throw new CustomError(err.message, 500)
-            } catch (err) {
-              next(err)
-            }
-          }, 100)
-    })
+    .catch(next)
 });
 
 app.put('/news/:id', (req,res,next) => {
@@ -104,44 +88,36 @@ app.put('/news/:id', (req,res,next) => {
     News.update({_id: id}, { $set: operations})   
     .exec()
     .then(result => {
-        res.status(200).json({
-            message: 'Successfully updated a News!',
-            updatedNews: result
-        })
+        if (!result) {
+            throw new CustomError('Internal Server Error - PUT Method', 500)
+        } else {
+            res.status(200).json({
+                message: 'Successfully updated a News!',
+                updatedNews: result
+            })
+        }        
     })
-    .catch(err => {
-        setTimeout(function () {
-            try {
-                throw new CustomError(err.message, 500)
-            } catch (err) {
-              next(err)
-            }
-        }, 100)
-    })
+    .catch(next)
 })
 
 app.delete('/news/:id', (req, res, next) => {
     const id = req.params.id;
     News.remove({_id: id})
     .exec()
-    .then(result => res.status(200).json(result))
-    .catch(err => {
-        setTimeout(function () {
-            try {
-                throw new CustomError(err.message, 500) 
-            } catch (err) {
-              next(err)
-            }
-        }, 100)
+    .then(result => {
+        if(!result) {
+            throw new CustomError('Unable to Delete News', 500) 
+        } else {
+            res.status(200).json(result)
+        }        
     })
+    .catch(next)
 });
 
 app.post('/users/register', (req,res,next) => {    
     bcrypt.hash(req.body.password, 10, (err, hash) =>{
         if(err) {
-            res.status(500).json({
-                error: err
-            }) 
+            throw new CustomError(err.message, 500) 
         } else {        
             const newUser = new User({
                 name: req.body.name,
@@ -150,20 +126,16 @@ app.post('/users/register', (req,res,next) => {
             })    
             newUser.save()
             .then(result => {
-                res.status(201).json({
-                    message: 'User Created'
-                });
-                res.redirect('/users/login')
+                if(!result) {
+                    throw new CustomError('Server error in Registration', 500) 
+                } else {
+                    res.status(201).json({
+                        message: 'User Created'
+                    });
+                    res.redirect('/users/login')
+                }                
             })
-            .catch(err => {
-                setTimeout(function () {
-                    try {
-                        throw new CustomError(err.message, 500) 
-                    } catch (err) {
-                      next(err)
-                    }
-                }, 100)
-            })
+            .catch(next)
         }
     })   
 });

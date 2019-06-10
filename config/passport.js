@@ -1,6 +1,7 @@
 const LocalStrategy = require('passport-local').Strategy
 const mongoose = require('mongoose') 
 const bcrypt = require('bcrypt')
+const CustomError = require('../error-handler/index')
 
 //Load user Model
 const User = require('../api/models/user');
@@ -17,7 +18,9 @@ module.exports = (passport) => {
 
                 //Match Password
                 bcrypt.compare(password, user.password, (err, isMatch) => {
-                    if(err) throw err;
+                    if(err) {
+                        throw new CustomError(err.message, 500)
+                    };
 
                     if(isMatch) {
                         return done(null, user)
