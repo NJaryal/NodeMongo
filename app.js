@@ -2,14 +2,37 @@ const express = require('express');
 const app = require('./api/routes/news')
 const logger = require('./utils/loggers')
 const mongoose = require('mongoose')
+const expressLayouts = require('express-ejs-layouts');
+const session = require('express-session')
+const passport = require('passport')
 
+//DB Config
 mongoose.connect('mongodb+srv://node-news:node-news@node-news-wvps2.mongodb.net/test?retryWrites=true&w=majority', {useNewUrlParser: true});
+
+//Passport Config
+require('./config/passport')(passport)
+
 //CORS Handling
 app.use((req,res,next) =>{
     res.header('Access-Control-Allow-Origin','*');
     res.header('Access-Control-Allow-Headers','Origin, Content-Type, Accept, Authorization')    
     next();
 })
+
+//EJS
+app.use(expressLayouts)
+app.set('view engine', 'ejs');
+
+//Session
+app.use(session({
+    secret: 'secret',
+    resave: true,
+    saveUninitialized: true
+}))
+
+//Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 //Logger to capture Api Endpoint, method and Timestamp
 app.use((req,res,next) => {    
