@@ -7,6 +7,7 @@ const News = require('../models/news')
 const bcrypt = require('bcrypt')
 const User = require('../models/user')
 const passport = require('passport')
+const facebookStrategy = require('passport-facebook')
 
 app.get('/users/login', (req,res) => {    
     res.render('login')
@@ -154,5 +155,25 @@ app.get('/users/login', (req, res, next) => {
     res.redirect('/users/login');    
 })
 
+const FACEBOOK_CLIENT_ID='458926694679667',
+    FACEBOOK_CLIENT_SECRET='c105cda26d7116215949f92b2afcb371'
+    FACEBOOK_CALLBACK_URL='http://127.0.0.1:3000/auth/facebook?cb'
+
+//Login With facebook
+const fbOptions = {
+   clientID: FACEBOOK_CLIENT_ID,
+   clientSecret: FACEBOOK_CLIENT_SECRET,
+   callbackURL: FACEBOOK_CALLBACK_URL,
+   profileFields: ['emails']
+}
+const fbCallback = (accessToken, refreshToken, profile, cb) => {
+    console.log(accessToken, refreshToken, profile)
+}
+passport.use(new facebookStrategy(fbOptions, fbCallback))
+app.get('/facebook', passport.authenticate('facebook', { scope: ['email']}))
+app.get('auth/facebook/callback',passport.authenticate('facebook', (err, user, info) => {
+    console.log(err, user, info);
+    })    
+)
 module.exports = app;
 
