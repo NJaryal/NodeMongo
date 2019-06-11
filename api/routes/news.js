@@ -115,30 +115,69 @@ app.delete('/news/:id', (req, res, next) => {
     .catch(next)
 });
 
-app.post('/users/register', (req,res,next) => {    
-    bcrypt.hash(req.body.password, 10, (err, hash) =>{
-        if(err) {
-            throw new CustomError(err.message, 500) 
-        } else {        
-            const newUser = new User({
-                name: req.body.name,
-                email: req.body.email,
-                password: hash
-            })    
-            newUser.save()
-            .then(result => {
-                if(!result) {
-                    throw new CustomError('Server error in Registration', 500) 
-                } else {
-                    res.status(201).json({
-                        message: 'User Created'
-                    });
-                    res.redirect('/users/login')
-                }                
-            })
-            .catch(next)
-        }
-    })   
+app.post('/users/register', (req,res) => {
+    const { name, email, password, confPassword} = req.body;
+    let errors = [];
+    //Required Fields
+    if(!name || !email || !password || !confPassword) {
+        errors.push({Msg: 'Please fill in all the Fields'})
+    }
+    //Password Match
+    if(password !== confPassword) {
+        errors.push({Msg: 'Passwords do not match'})
+    }
+    if(errors.length> 0) {
+        res.render('register', {
+            errors,
+            name,
+            email,
+            password,
+            confPassword
+
+        })
+    } else {
+        User.findOne({email: email})
+        .then(user => {
+            if(user) {
+                errors.push({Msg: 'Email ID already Exists'})
+                res.render('register',{
+                errors,
+                name,
+                email,
+                password,
+                confPassword    
+                })
+            } else {
+                const newUser = new User({
+                    name: req.body.name,
+                    email: req.body.email,
+                    password: hash
+                })
+
+                bcrypt.genSalt(10, (err, salt) => {
+                    bcrypt.hash(newUser.password, salt, (err, hash) =>{
+                        if(err) {
+                           throw new CustomError('Failed to register user', 500) 
+                        }      
+                        newUser.password = hash;
+                        newUser.save()
+                        .then(result => {
+                            if(!result) {
+                                throw new CustomError('Internal Server Error while saving', 500)
+                            } else {
+                                res.redirect('/users/login')
+                                res.status(201).json({
+                                    message: 'User successfully Created',
+                                    RegisteredUser: result
+                                });
+                            }                                        
+                        })
+                        .catch(next)                        
+                    })
+                })
+            }              
+        })
+    }
 });
 
 //Login Handle
