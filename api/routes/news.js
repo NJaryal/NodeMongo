@@ -25,7 +25,7 @@ app.get('/news', (req, res, next) => {
         if(!data) {
             throw new CustomError('Internal Server Error', 500)
         }
-        if(data.length >= 10) {
+        if(data.length >= 0) {
             res.status(200).json({
                 count: data.length,
                 newsArray: data                
