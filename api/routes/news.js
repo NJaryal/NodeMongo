@@ -25,19 +25,13 @@ app.get('/news', (req, res, next) => {
         if(!data) {
             throw new CustomError('Internal Server Error', 500)
         }
-        if(data.length >= 0) {
+        if(data.length >= 10) {
             res.status(200).json({
                 count: data.length,
                 newsArray: data                
             })
-        } else {
-            setTimeout(function () {
-                try {
-                    throw new CustomError('The news data is empty', 200)
-                } catch (err) {
-                  next(err)
-                }
-            }, 100)            
+        } else {            
+            throw new CustomError('The news data is empty', 200)           
         }  
     })
     .catch((next))
